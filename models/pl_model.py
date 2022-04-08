@@ -8,7 +8,6 @@ import torchmetrics
 class PL_model(pl.LightningModule):
     def __init__(self, train_config):
         super().__init__()
-        self.save_hyperparameters()
         self.model = MultinomialModel(train_config)
         self.train_config = train_config
         
