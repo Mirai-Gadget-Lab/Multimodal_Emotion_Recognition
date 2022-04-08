@@ -48,8 +48,8 @@ class multimodal_dataset(Dataset):
             'text' : txt,
             'wav' : wav,
             'emotion': emotion2int[emotion],
-            'valence': round(valence),
-            'arousal': round(arousal)
+            'valence': int(valence)-1,
+            'arousal': round(arousal)-1
         }
         return sample
     
@@ -108,56 +108,3 @@ class multimodal_collator():
         if self.return_text:
             labels['text'] = text
         return text_inputs, audio_inputs, labels
-    
-    
-class PartitionPerEpochDataModule(pl.LightningDataModule):
-
-    def __init__(
-        self, train, val, batch_size, config, num_workers=4
-    ):
-        super().__init__()
-        self.config = config
-        self.text_tokenizer = AutoTokenizer.from_pretrained(config.text_encoder)
-        self.audio_processor = Wav2Vec2Processor.from_pretrained(config.audio_processor)
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        
-        self.train_csv = train
-        self.val_csv = val
-               
-    def prepare_data(self):
-        pass
-    def setup(self, stage: Optional[str] = None):
-        """
-        Anything called here is being distributed across GPUs
-        (do many times).  Lightning handles distributed sampling.
-        """
-        # Build the val dataset
-        
-        self.val_dataset = multimodal_dataset(self.val_csv, self.config)
-        self.train_dataset = multimodal_dataset(self.train_csv,self.config)
-        
-    def train_dataloader(self):
-        """
-        This function sends the same file to each GPU and
-        loops back after running out of files.
-        Lightning will apply distributed sampling to
-        the data loader so that each GPU receives
-        different samples from the file until exhausted.
-        """
-        return DataLoader(
-            self.train_dataset,
-            self.batch_size,
-            num_workers=self.num_workers,
-            collate_fn=multimodal_collator(self.text_tokenizer, self.audio_processor),
-            pin_memory=True,
-            shuffle=True
-        )
-    def val_dataloader(self):
-        return DataLoader(
-            self.val_dataset,
-            self.batch_size,
-            num_workers=self.num_workers,
-            collate_fn=multimodal_collator(self.text_tokenizer, self.audio_processor),
-            pin_memory=True,
-        )

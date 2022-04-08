@@ -9,12 +9,12 @@ class MultinomialModel(nn.Module):
         self.text_encoder = AutoModel.from_pretrained(config.text_encoder)
         self.audio_encoder = Wav2Vec2ForSequenceClassification.from_pretrained(config.audio_processor)
         self.audio_encoder.projector = nn.Linear(1024, 1024)
-        self.audio_encoder.classifier = nn.Linear(1024, 1024)
-        self.projection = LinearBlock(2048, 1024)
+        self.audio_encoder.classifier = nn.Linear(1024, 768)
+        self.projection = LinearBlock(1536, 768)
         
-        self.emotion_out = nn.Linear(1024, 7)
-        self.valence_out = nn.Linear(1024, 5)
-        self.arousal_out = nn.Linear(1024, 5)
+        self.emotion_out = nn.Linear(768, 7)
+        self.valence_out = nn.Linear(768, 5)
+        self.arousal_out = nn.Linear(768, 5)
         
     def forward(self, text_inputs, audio_inputs):
         text_feat = self.text_encoder(**text_inputs)['pooler_output']

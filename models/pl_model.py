@@ -33,7 +33,7 @@ class PL_model(pl.LightningModule):
         text_inputs, audio_inputs, labels = batch
         pred = self.forward(text_inputs, audio_inputs)
         emotion_loss, valence_loss, arousal_loss = self.custom_loss(**labels, **pred)
-        train_loss = emotion_loss, valence_loss, arousal_loss
+        train_loss = emotion_loss + valence_loss + arousal_loss
         
         self.train_accuracy_emotion(pred['pred_emotion'], labels['emotion'])
         self.train_accuracy_valence(pred['pred_valence'], labels['valence'])
@@ -43,7 +43,7 @@ class PL_model(pl.LightningModule):
         self.log("train_emotion_loss", emotion_loss, on_epoch=True)
         self.log("train_valence_loss", valence_loss, on_epoch=True)
         self.log("train_arousal_loss", arousal_loss, on_epoch=True)
-        self.log('train_accuracy_arousal', self.train_accuracy_emotion, on_step=True, on_epoch=False)
+        self.log('train_accuracy_emotion', self.train_accuracy_emotion, on_step=True, on_epoch=False)
         self.log('train_accuracy_valence', self.train_accuracy_valence, on_step=True, on_epoch=False)
         self.log('train_accuracy_arousal', self.train_accuracy_arousal, on_step=True, on_epoch=False)
         
@@ -53,7 +53,7 @@ class PL_model(pl.LightningModule):
         text_inputs, audio_inputs, labels = batch
         pred = self.forward(text_inputs, audio_inputs)
         emotion_loss, valence_loss, arousal_loss = self.custom_loss(**labels, **pred)
-        val_loss = emotion_loss, valence_loss, arousal_loss
+        val_loss = emotion_loss + valence_loss + arousal_loss
         
         self.train_accuracy_emotion(pred['pred_emotion'], labels['emotion'])
         self.train_accuracy_valence(pred['pred_valence'], labels['valence'])
@@ -63,7 +63,7 @@ class PL_model(pl.LightningModule):
         self.log("val_emotion_loss", emotion_loss, on_epoch=True)
         self.log("val_valence_loss", valence_loss, on_epoch=True)
         self.log("val_arousal_loss", arousal_loss, on_epoch=True)
-        self.log('val_accuracy_arousal', self.val_accuracy_emotion, on_step=True, on_epoch=False)
+        self.log('val_accuracy_emotion', self.val_accuracy_emotion, on_step=True, on_epoch=False)
         self.log('val_accuracy_valence', self.val_accuracy_valence, on_step=True, on_epoch=False)
         self.log('val_accuracy_arousal', self.val_accuracy_arousal, on_step=True, on_epoch=False)
         

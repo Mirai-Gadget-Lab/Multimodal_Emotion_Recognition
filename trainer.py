@@ -56,9 +56,9 @@ def main(config):
     logger = TensorBoardLogger(train_config.log_dir, name=config.exp_name)
 
     trainer = pl.Trainer(
-        accelerator="gpu", 
-        GPTNeoForCausalLM=1,
-        strategy="horovod",
+        accelerator="gpu",
+        devices=1,
+        strategy="ddp",
         max_epochs=100,
         checkpoint_callback=True,
         callbacks=[checkpoint_callback],
@@ -66,6 +66,7 @@ def main(config):
         amp_backend="native",
         profiler="simple",
         logger=logger,
+        num_nodes=1
         )
     trainer.fit(model, data)
     
