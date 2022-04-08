@@ -2,4 +2,4 @@ pandas
 librosa
 matplotlib
 transformers
-transformers
+pytorch-lightning
