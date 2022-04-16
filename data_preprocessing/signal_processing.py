@@ -39,6 +39,8 @@ def process_data(save_path:str, csv_file_list:list) -> None:
         
         for segment_id in list(set(df_ecg['segment_id'])):
             np.save(file=os.path.join(save_path, segment_id)+'.npy', arr=df_ecg.query("segment_id == @segment_id")['ecg'].values) 
+            
+    return None
 # %%
 def main():
     ECG_DATAPATH = "../data/KEMDy19/ECG"
