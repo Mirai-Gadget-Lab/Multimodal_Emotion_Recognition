@@ -1,6 +1,7 @@
 # %%
 import pandas as pd
 import multiprocessing as mp
+import neurokit2 as nk
 import numpy as np
 import os
 import glob
@@ -10,6 +11,22 @@ from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 pd.set_option("display.max_columns", None)
+
+def _get_interpolate_rri(rpeaks: np.ndarray) -> np.ndarray:
+    """
+    Interporlate given rri
+
+    Args:
+        rpeaks (np.ndarray): rpeaks
+
+    Returns:
+        np.ndarray: interporlated rpeaks
+    """
+    ## Interporation
+    rri_interp = np.interp(np.arange(0, max(rpeaks), 250),
+                           xp=rpeaks[1:],
+                           fp=np.diff(rpeaks))
+    return rri_interp
 
 
 def process_data(save_path:str, csv_file_list:list) -> None:
@@ -38,7 +55,15 @@ def process_data(save_path:str, csv_file_list:list) -> None:
         df_ecg.columns = ['times', 'ecg', 'time_point', 'segment_id']
         
         for segment_id in list(set(df_ecg['segment_id'])):
-            np.save(file=os.path.join(save_path, segment_id)+'.npy', arr=df_ecg.query("segment_id == @segment_id")['ecg'].values) 
+            # Process it
+            try:
+                ecg = df_ecg.query("segment_id == @segment_id")['ecg'].values
+                _, info = nk.ecg_process(ecg, sampling_rate=250)
+                rpeaks = info['ECG_R_Peaks'] * 4 # Multiply 4 beacuse of ecg sampling rates
+                rri = _get_interpolate_rri(rpeaks=rpeaks)
+                np.save(file=os.path.join(save_path, segment_id)+'.npy', arr=rri)
+            except:
+                pass
             
     return None
 # %%
