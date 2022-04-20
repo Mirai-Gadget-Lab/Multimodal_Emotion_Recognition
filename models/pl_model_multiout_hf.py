@@ -1,12 +1,11 @@
 import torch
 from torch import nn
 import pytorch_lightning as pl
-import transformers
-from models.model_huggingface import *
+from models.model_hf import MultinomialModel
 import torchmetrics
 
 class PL_model(pl.LightningModule):
-    def __init__(self, train_config):
+    def __init__(self, data_config, train_config):
         super().__init__()
         self.model = MultinomialModel(train_config)
         self.train_config = train_config
@@ -55,9 +54,9 @@ class PL_model(pl.LightningModule):
         emotion_loss, valence_loss, arousal_loss = self.custom_loss(**labels, **pred)
         val_loss = emotion_loss + valence_loss + arousal_loss
         
-        self.train_accuracy_emotion(pred['pred_emotion'], labels['emotion'])
-        self.train_accuracy_valence(pred['pred_valence'], labels['valence'])
-        self.train_accuracy_arousal(pred['pred_arousal'], labels['arousal'])
+        self.val_accuracy_emotion(pred['pred_emotion'], labels['emotion'])
+        self.val_accuracy_valence(pred['pred_valence'], labels['valence'])
+        self.val_accuracy_arousal(pred['pred_arousal'], labels['arousal'])
         
         self.log("val_loss", val_loss, on_epoch=True)
         self.log("val_emotion_loss", emotion_loss, on_epoch=True)
@@ -68,15 +67,13 @@ class PL_model(pl.LightningModule):
         self.log('val_accuracy_arousal', self.val_accuracy_arousal, on_step=True, on_epoch=False)
         
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.train_config.lr)
-
-        scheduler = transformers.get_cosine_schedule_with_warmup(
-            optimizer,
-            num_warmup_steps=self.train_config.num_warmup_steps,
-            num_training_steps=self.train_config.num_training_steps
-        )
-        return [optimizer], [scheduler]
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.train_config.lr)
+            # scheduler = transformers.get_cosine_schedule_with_warmup(
+        #     optimizer,
+        #     num_warmup_steps=self.train_config.num_warmup_steps,
+        #     num_training_steps=self.train_config.num_training_steps
+        # )
+        return optimizer
 
     def custom_loss(self, pred_emotion, pred_valence, pred_arousal, emotion, valence, arousal):
         emotion_loss = self.emotion_loss(pred_emotion, emotion)

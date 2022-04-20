@@ -1,35 +1,22 @@
 import pandas as pd
 from torch.utils.data import Dataset
-import torchaudio
 import torch
-import os
+import os, re, librosa
 from utils import *
-import re
-from torch.nn.utils.rnn import pad_sequence
 
 class multimodal_dataset(Dataset):
     
-    def __init__(self, config):
-        self.csv = pd.read_csv(config.csv_path)
+    def __init__(self, csv, config):
+        self.csv = csv
         self.root_path = config.root_path
-        self.mel_transform = torchaudio.transforms.MelSpectrogram(
-            sample_rate=config.sample_rate,
-            n_fft=config.n_fft,
-            win_length=config.win_length,
-            hop_length=config.hop_length,
-            n_mels=config.n_mels,
-            power=config.power,
-            normalized=config.normalized
-        )
         self.remove_non_text = config.remove_non_text
         
     def __len__(self):
         return len(self.csv)
     
     def _load_wav(self, wav_path):
-        wav, _ = torchaudio.load(wav_path)
-        mel = self.mel_transform(wav)
-        return mel.squeeze().permute(1, 0)
+        wav, _ = librosa.load(wav_path, sr=16000)
+        return wav
     
     def _load_txt(self, txt_path):
         with open(txt_path, 'r') as f:
@@ -45,9 +32,8 @@ class multimodal_dataset(Dataset):
         wav_path = os.path.join(self.root_path, self.csv['segment_id'].iloc[idx]+'.wav')
         txt_path = os.path.join(self.root_path, self.csv['segment_id'].iloc[idx]+'.txt')
         
-        mel = self._load_wav(wav_path)
+        wav = self._load_wav(wav_path)
         txt = self._load_txt(txt_path)
-        pos_mel = np.arange(1, mel.shape[0] + 1)
         
         emotion = self.csv['emotion'].iloc[idx]
         valence = self.csv['valence'].iloc[idx]
@@ -55,11 +41,10 @@ class multimodal_dataset(Dataset):
         
         sample = {
             'text' : txt,
-            'mel' : mel,
-            'pos_mel': pos_mel,
+            'wav' : wav,
             'emotion': emotion2int[emotion],
-            'valence': round(valence),
-            'arousal': round(arousal)
+            'valence': int(valence)-1,
+            'arousal': round(arousal)-1
         }
         return sample
     
@@ -69,15 +54,15 @@ class multimodal_dataset(Dataset):
 
 class multimodal_collator():
     
-    def __init__(self, tokenizer, return_text=False, max_length=512):
-        self.tokenizer = tokenizer
+    def __init__(self, text_tokenizer, audio_processor, return_text=False, max_length=512):
+        self.text_tokenizer = text_tokenizer
+        self.audio_processor = audio_processor
         self.return_text = return_text
         self.max_length = max_length
         
     def __call__(self, batch):
         text = [d['text'] for d in batch]
-        mel = [d['mel'] for d in batch]
-        pos_mel = [d['pos_mel'] for d in batch]
+        wav = [d['wav'] for d in batch]
         emotion = [d['emotion'] for d in batch]
         valence = [d['valence'] for d in batch]
         arousal = [d['arousal'] for d in batch]
@@ -85,10 +70,8 @@ class multimodal_collator():
         
         text = [i for i, _ in sorted(
             zip(text, text_length), key=lambda x: x[1], reverse=True)]
-        mel = [i for i, _ in sorted(
-            zip(mel, text_length), key=lambda x: x[1], reverse=True)]
-        pos_mel = [i for i, _ in sorted(
-            zip(pos_mel, text_length), key=lambda x: x[1], reverse=True)]
+        wav = [i for i, _ in sorted(
+            zip(wav, text_length), key=lambda x: x[1], reverse=True)]
         emotion = [i for i, _ in sorted(
             zip(emotion, text_length), key=lambda x: x[1], reverse=True)]
         valence = [i for i, _ in sorted(
@@ -96,10 +79,7 @@ class multimodal_collator():
         arousal = [i for i, _ in sorted(
             zip(arousal, text_length), key=lambda x: x[1], reverse=True)]
         
-        mel = pad_mel(mel)
-        pos_mel = prepare_data(pos_mel).astype(np.int32)
-        
-        text_inputs = self.tokenizer(
+        text_inputs = self.text_tokenizer(
             text,
             padding=True,
             truncation=True,
@@ -107,10 +87,14 @@ class multimodal_collator():
             add_special_tokens=True,
             max_length=self.max_length
         )
-        mel_inputs = {
-            'mel' : torch.FloatTensor(mel).permute(0, 2, 1),
-            'pos_mel': torch.LongTensor(pos_mel)
-        }
+        
+        audio_inputs = self.audio_processor(
+            wav,
+            sampling_rate=16000, 
+            padding=True, 
+            return_tensors='pt'
+        )
+        
         labels = {
             "emotion" : torch.LongTensor(emotion),
             "valence" : torch.LongTensor(valence),
@@ -118,4 +102,4 @@ class multimodal_collator():
         }
         if self.return_text:
             labels['text'] = text
-        return text_inputs, mel_inputs, labels
+        return text_inputs, audio_inputs, labels
