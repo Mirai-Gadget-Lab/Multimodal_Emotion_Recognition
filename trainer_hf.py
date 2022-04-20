@@ -76,7 +76,7 @@ def main(args):
         accelerator="gpu",
         devices=2,
         # strategy="ddp",
-        max_epochs=20,
+        max_epochs=15,
         checkpoint_callback=True,
         callbacks=[checkpoint_callback],
         precision=16,
