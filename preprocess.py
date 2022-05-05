@@ -30,9 +30,13 @@ def main(args):
     # wav, txt를 하나의 디렉토리에 저장. 
     try:
         os.mkdir(args.save_path)
-        os.mkdir(os.path.join(args.save_path, 'txt_wav'))
     except:
         pass 
+    
+    try: 
+        os.mkdir(os.path.join(args.save_path, 'txt_wav'))
+    except:
+        pass
     
     datas = glob(os.path.join(args.root_path, 'wav/*/*/*'))
     for path in datas:
