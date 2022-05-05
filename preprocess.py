@@ -3,7 +3,6 @@ import pandas as pd
 from glob import glob
 import os
 import shutil
-import matplotlib.pyplot as plt
 import argparse
 
 def define_argparser():
