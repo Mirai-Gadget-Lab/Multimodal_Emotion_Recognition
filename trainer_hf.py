@@ -1,6 +1,6 @@
 from config import HF_DataConfig, HF_TrainConfig
 import os
-from models.pl_model_hf import PL_model
+from models.pl_model_hf import *
 import pytorch_lightning as pl
 from dataset_hf import *
 import pytorch_lightning.callbacks as plc
@@ -19,6 +19,7 @@ def define_argparser():
     p.add_argument('--batch_size', required=True, type=int)
     p.add_argument('--accumulate_grad', required=True, type=int, default=1)
     p.add_argument('--clip_length', type=int, default=25)
+    p.add_argument('--loss', type=str, default="ce")
     config = p.parse_args()
 
     return config
@@ -38,7 +39,7 @@ def main(args):
     
     csv['wav_length'] = csv['wav_end'] - csv['wav_start']
     csv = csv.query("wav_length <= %d"%args.clip_length)
-    dev, _ = train_test_split(csv, test_size=0.1, random_state=1004)
+    dev, _ = train_test_split(csv, test_size=0.2, random_state=1004)
     train, val = train_test_split(dev, test_size=0.1, random_state=1004)
     
     text_tokenizer = AutoTokenizer.from_pretrained(train_config.text_encoder)
@@ -57,7 +58,12 @@ def main(args):
         
     # Load model and configuration.
     
-    model = PL_model(train_config)
+    if args.loss == "ce":
+        model = PL_model_ce(train_config)
+    elif args.loss == "cs_and_ce":
+        model = PL_model(train_config)
+    else:
+        raise "WrongLossName"
     setattr(model, 'train_dataloader', lambda: train_loader)
     setattr(model, 'val_dataloader', lambda: val_loader)
         
@@ -65,7 +71,7 @@ def main(args):
         monitor="val_loss",
         dirpath=os.path.join(train_config.checkpoint_path, args.exp_name),
         filename="{epoch:02d}-{val_loss:.5f}",
-        save_top_k=2,
+        save_top_k=1,
         mode="min",
     )
 
@@ -74,7 +80,7 @@ def main(args):
 
     trainer = pl.Trainer(
         accelerator="gpu",
-        devices=2,
+        devices=3,
         # strategy="ddp",
         max_epochs=15,
         checkpoint_callback=True,
@@ -84,7 +90,7 @@ def main(args):
         profiler="simple",
         accumulate_grad_batches=args.accumulate_grad,
         logger=logger,
-        gradient_clip_val=2,
+        gradient_clip_val=10,
         plugins=DDPPlugin(find_unused_parameters=False)
         )
     

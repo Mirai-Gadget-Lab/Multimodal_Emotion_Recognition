@@ -1,5 +1,10 @@
 # Multimodal_Emotion_Recognition
 
+MultiModal Emotion Recognition using Cross modal Interaction module and multiloss
+
+- Data: [KEMDy19](https://nanum.etri.re.kr/share/kjnoh/KEMDy19?lang=ko_KR)
+- Modality: Audio, Text
+
 # Installation
 ## Requirements
 
@@ -28,3 +33,41 @@ d. Install requirments.
 ```shell
 pip install -r requirements.txt
 ```
+
+# Prepare for training
+
+a. Prepare data 
+
+- root_path: Original KEMD19 path Ex) /home/ubuntu/data/KEMD_19/
+- save_path: save folder, default: ./data/
+
+```shell
+python preprocess.py --root_path your_KEMD_19_path --save_path ./data/
+```
+
+b. Set config
+
+Change config.py for your environment.
+
+But, i recommand default config setting.
+
+# Train 
+
+Run Training code
+
+```shell
+bash train_hf.sh
+```
+
+Check your GPU, and change train_hf.sh properly.
+
+# Inference
+
+```shell
+CUDA_VISIBLE_DEVICES=0 python inference.py --model_save_path ./models_zoo/checkpoint/
+```
+
+Only single gpu inference avaliable now
+
+# Result
+

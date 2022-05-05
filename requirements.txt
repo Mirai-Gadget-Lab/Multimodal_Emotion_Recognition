@@ -3,4 +3,4 @@ librosa
 matplotlib
 transformers
 pytorch-lightning
-horovod
+sklearn
