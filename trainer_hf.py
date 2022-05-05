@@ -9,8 +9,6 @@ import argparse
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, Wav2Vec2Processor
-from pytorch_lightning.plugins import DDPPlugin
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 def define_argparser():
     p = argparse.ArgumentParser()
@@ -27,6 +25,7 @@ def define_argparser():
 
 def main(args):
     pl.seed_everything(42)
+    num_gpu = torch.cuda.device_count()
     data_config = HF_DataConfig()
     train_config = HF_TrainConfig(
         batch_size=args.batch_size,
@@ -75,13 +74,12 @@ def main(args):
         mode="min",
     )
 
-    # early_stop_callback = EarlyStopping(monitor="val_loss", patience=5, verbose=False, mode="min")
     logger = TensorBoardLogger(train_config.log_dir, name=args.exp_name)
 
     trainer = pl.Trainer(
         accelerator="gpu",
-        devices=3,
-        # strategy="ddp",
+        devices=num_gpu,
+        strategy="ddp",
         max_epochs=15,
         checkpoint_callback=True,
         callbacks=[checkpoint_callback],
@@ -91,7 +89,6 @@ def main(args):
         accumulate_grad_batches=args.accumulate_grad,
         logger=logger,
         gradient_clip_val=10,
-        plugins=DDPPlugin(find_unused_parameters=False)
         )
     
     trainer.fit(model)

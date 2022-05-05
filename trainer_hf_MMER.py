@@ -26,6 +26,7 @@ def define_argparser():
 
 def main(args):
     pl.seed_everything(42)
+    num_gpu = torch.cuda.device_count()
     data_config = HF_DataConfig()
     train_config = HF_TrainConfig(
         batch_size=args.batch_size,
@@ -78,7 +79,7 @@ def main(args):
 
     trainer = pl.Trainer(
         accelerator="gpu",
-        devices=3,
+        devices=num_gpu,
         strategy="ddp",
         max_epochs=15,
         checkpoint_callback=True,
@@ -89,7 +90,6 @@ def main(args):
         accumulate_grad_batches=args.accumulate_grad,
         logger=logger,
         gradient_clip_val=2,
-        # plugins=DDPPlugin(find_unused_parameters=False)
         )
     
     trainer.fit(model)
