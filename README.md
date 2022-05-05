@@ -71,3 +71,4 @@ Only single gpu inference avaliable now
 
 # Result
 
+<img src="result/result.png" width=900> 
