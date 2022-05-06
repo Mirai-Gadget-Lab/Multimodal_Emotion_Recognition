@@ -45,6 +45,10 @@ a. Prepare data
 python preprocess.py --root_path your_KEMD_19_path --save_path ./data/
 ```
 
+Here is the preprocess flow chart.
+
+<img src="result/preprocessing.png" width=600> 
+
 b. Set config
 
 Change config.py for your environment.
