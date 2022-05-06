@@ -49,6 +49,9 @@ Here is the preprocess flow chart.
 
 <img src="result/preprocessing.png" width=600> 
 
+Note that, wav_length cliping is conducted in train_hf.sh or inference.py 
+
+
 b. Set config
 
 Change config.py for your environment.
