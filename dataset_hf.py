@@ -66,18 +66,18 @@ class multimodal_collator():
         emotion = [d['emotion'] for d in batch]
         valence = [d['valence'] for d in batch]
         arousal = [d['arousal'] for d in batch]
-        text_length = [len(d['text']) for d in batch]
+        # text_length = [len(d['text']) for d in batch]
         
-        text = [i for i, _ in sorted(
-            zip(text, text_length), key=lambda x: x[1], reverse=True)]
-        wav = [i for i, _ in sorted(
-            zip(wav, text_length), key=lambda x: x[1], reverse=True)]
-        emotion = [i for i, _ in sorted(
-            zip(emotion, text_length), key=lambda x: x[1], reverse=True)]
-        valence = [i for i, _ in sorted(
-            zip(valence, text_length), key=lambda x: x[1], reverse=True)]
-        arousal = [i for i, _ in sorted(
-            zip(arousal, text_length), key=lambda x: x[1], reverse=True)]
+        # text = [i for i, _ in sorted(
+        #     zip(text, text_length), key=lambda x: x[1], reverse=True)]
+        # wav = [i for i, _ in sorted(
+        #     zip(wav, text_length), key=lambda x: x[1], reverse=True)]
+        # emotion = [i for i, _ in sorted(
+        #     zip(emotion, text_length), key=lambda x: x[1], reverse=True)]
+        # valence = [i for i, _ in sorted(
+        #     zip(valence, text_length), key=lambda x: x[1], reverse=True)]
+        # arousal = [i for i, _ in sorted(
+        #     zip(arousal, text_length), key=lambda x: x[1], reverse=True)]
         
         text_inputs = self.text_tokenizer(
             text,
