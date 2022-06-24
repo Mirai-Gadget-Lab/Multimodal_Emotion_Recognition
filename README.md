@@ -70,11 +70,15 @@ Check your GPU, and change train_hf.sh properly.
 
 # Inference
 
-if you train all the models, execute below codes.
+## Case 1
+
+if you train the model your self using above code, execute below codes.
 
 ```shell
 CUDA_VISIBLE_DEVICES=0 python inference.py --model_save_path ./models_zoo/checkpoint/
 ```
+
+## Case 2
 
 Because pretarined model is very large, we share best model only.
 
