@@ -88,7 +88,7 @@ def main(args):
         profiler="simple",
         accumulate_grad_batches=args.accumulate_grad,
         logger=logger,
-        gradient_clip_val=10,
+        gradient_clip_val=2,
         )
     
     trainer.fit(model)
