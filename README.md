@@ -70,24 +70,10 @@ Check your GPU, and change train_hf.sh properly.
 
 # Inference
 
-## Case 1
-
 if you train the model your self using above code, execute below codes.
 
 ```shell
 CUDA_VISIBLE_DEVICES=0 python inference.py --model_save_path ./models_zoo/checkpoint/
-```
-
-## Case 2
-
-Because pretarined model is very large, we share best model only.
-
-you can download [pretrained model](https://drive.google.com/file/d/15UjgVC4avkNt-ZWCM4Hpdbibfh4EwfKM/view?usp=sharing)
-
-In this case, you execute below code.
-
-```shell
-CUDA_VISIBLE_DEVICES=0 python inference_only_best.py --model_save_path ckp_save_path
 ```
 
 # Result
